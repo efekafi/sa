@@ -11,9 +11,13 @@ export default function App() {
   const [location, setLocation] = useState<LocationId>(LocationId.BEDROOM);
   const [playerStats, setPlayerStats] = useState<PlayerStats>(INITIAL_PLAYER_STATS);
   
-  // Player Position State (Lifted up to preserve location during renders)
-  const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
-  const [isInitialized, setIsInitialized] = useState(false);
+  // FIX: Initialize directly with the correct BEDROOM coordinates to avoid (0,0) wall glitch
+  const [playerPos, setPlayerPos] = useState<Position>(() => {
+    const startMap = MAPS[LocationId.BEDROOM];
+    return { x: startMap.playerStart.x * 40, y: startMap.playerStart.y * 40 };
+  });
+
+  const [isInitialized, setIsInitialized] = useState(true); // Set to true immediately as we handled initial state
 
   // Dialogue State
   const [activeDialogueId, setActiveDialogueId] = useState<string | null>('INTRO');
@@ -24,15 +28,6 @@ export default function App() {
   
   // Flags for story progression
   const [flags, setFlags] = useState<Record<string, boolean>>({});
-
-  // Initialization
-  useEffect(() => {
-      if (!isInitialized) {
-          const startMap = MAPS[LocationId.BEDROOM];
-          setPlayerPos({ x: startMap.playerStart.x * 40, y: startMap.playerStart.y * 40 });
-          setIsInitialized(true);
-      }
-  }, [isInitialized]);
 
   // --- HANDLERS ---
 
@@ -119,8 +114,6 @@ export default function App() {
       setCurrentEnemy(null);
   };
 
-  if (!isInitialized) return <div className="bg-black h-screen text-white">Yükleniyor...</div>;
-
   // --- RENDER ---
 
   return (
@@ -144,74 +137,4 @@ export default function App() {
 
           {/* 2. DIALOGUE OVERLAY */}
           {(phase === GamePhase.INTRO || phase === GamePhase.DIALOGUE) && activeDialogueId && (
-              <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 w-[90%] max-w-3xl border-4 border-white bg-black p-6 z-50 cursor-pointer shadow-[0_0_30px_rgba(255,255,255,0.2)]" onClick={handleNextDialogue}>
-                   {(() => {
-                       const nodes = DIALOGUES[activeDialogueId];
-                       const node = nodes?.find(n => n.id === currentDialogueNodeId);
-                       if (!node) return null;
-                       
-                       return (
-                        <div className="flex gap-4 items-start">
-                            <div className="text-6xl animate-bounce min-w-[80px] h-[80px] flex items-center justify-center border-2 border-white bg-gray-900">{node.face}</div>
-                            <div className="flex-1">
-                                <div className="text-yellow-400 text-xl font-bold mb-2 uppercase tracking-wider border-b border-gray-700 pb-1">{node.speaker}</div>
-                                <div className="text-2xl leading-relaxed font-mono text-white min-h-[80px]">
-                                    <Typewriter key={node.id} text={node.text} speed={15} />
-                                </div>
-                                <div className="text-right mt-2 animate-pulse text-gray-500 text-sm">[TIKLA / ENTER]</div>
-                            </div>
-                        </div>
-                       );
-                   })()}
-              </div>
-          )}
-
-          {/* 3. BATTLE SCENE */}
-          {phase === GamePhase.BATTLE && currentEnemy && (
-              <div className="absolute inset-0 z-50 bg-black">
-                  <BattleSystem 
-                    enemy={currentEnemy}
-                    playerStats={playerStats}
-                    onBattleEnd={handleBattleEnd}
-                    setPlayerStats={setPlayerStats}
-                  />
-              </div>
-          )}
-
-          {/* 4. GAME OVER */}
-          {phase === GamePhase.GAME_OVER && (
-            <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center text-center text-white">
-                <h1 className="text-6xl text-red-600 mb-4 font-bold animate-pulse">DOLANDIRILDIN.</h1>
-                <p className="text-gray-400 mb-8">Hesabın boşaltıldı.</p>
-                <button 
-                onClick={() => window.location.reload()}
-                className="border-2 border-white px-6 py-3 hover:bg-white hover:text-black text-xl font-bold transition-colors"
-                >
-                BAŞA DÖN
-                </button>
-            </div>
-          )}
-
-          {/* 5. ENDING */}
-          {phase === GamePhase.ENDING && (
-            <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center text-center text-white p-8">
-                <h1 className="text-6xl text-yellow-400 mb-8 font-bold pixel-borders p-4 animate-bounce">MUTLU SON?</h1>
-                <div className="max-w-2xl text-xl space-y-6 leading-relaxed text-left border border-white p-8 bg-gray-900/50">
-                    <p>Ahmet, Wexa'nın teklifini reddetti ve "Unsubscribe" tuşuna bastı.</p>
-                    <p className="text-gray-400">*sistem çökme sesleri*</p>
-                    <p>Gözlerini açtığında kendi yatağındaydı. Ter içindeydi.</p>
-                    <p>Telefonuna bir bildirim geldi: <span className="text-green-400">"Maaşınız yatmıştır."</span></p>
-                    <p>"Oh be," dedi Ahmet. "Gerçek hayat daha az stresli... sanırım."</p>
-                    <p className="text-xs text-gray-500 mt-10 text-center">YAPIMCI: AHMET'İN ABSÜRT PARALEL EVRENİ EKİBİ</p>
-                </div>
-                <button 
-                    onClick={() => window.location.reload()}
-                    className="mt-8 border-2 border-white px-6 py-3 hover:bg-white hover:text-black text-xl font-bold"
-                >
-                    TEKRAR OYNA
-                </button>
-            </div>
-          )}
-      </div>
-  );
-}
+              <div className="absolute bottom-10 left

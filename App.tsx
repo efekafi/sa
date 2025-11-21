@@ -24,7 +24,7 @@ export default function App() {
       const startMap = MAPS[LocationId.BEDROOM];
       setPlayerPos({
         x: startMap.playerStart.x * 40,
-        y: startMap.playerStart.y * 40,
+        y: startMap.playerStart.y * 40
       });
       setIsInitialized(true);
     }
@@ -32,25 +32,28 @@ export default function App() {
 
   const handleNextDialogue = () => {
     if (!activeDialogueId) return;
+
     const nodes = DIALOGUES[activeDialogueId];
-    const node = nodes.find((n) => n.id === currentDialogueNodeId);
+    const node = nodes.find(n => n.id === currentDialogueNodeId);
+    if (!node) return;
 
-    if (node) {
-      if (node.triggerBattle) {
-        setPhase(GamePhase.BATTLE);
-        const enemy = ENEMIES[node.triggerBattle];
-        setCurrentEnemy({ ...enemy, hp: enemy.maxHp });
-        setActiveDialogueId(null);
-        return;
-      }
+    if (node.triggerBattle) {
+      setPhase(GamePhase.BATTLE);
+      const enemy = ENEMIES[node.triggerBattle];
+      setCurrentEnemy({ ...enemy, hp: enemy.maxHp });
+      setActiveDialogueId(null);
+      return;
+    }
 
-      if (node.next && node.next !== 'end') {
-        const nextNode = nodes.find((n) => n.id === node.next);
-        if (nextNode) setCurrentDialogueNodeId(node.next);
-        else endDialogue();
+    if (node.next && node.next !== "end") {
+      const nextNode = nodes.find(n => n.id === node.next);
+      if (nextNode) {
+        setCurrentDialogueNodeId(node.next);
       } else {
         endDialogue();
       }
+    } else {
+      endDialogue();
     }
   };
 
@@ -60,9 +63,9 @@ export default function App() {
       setPhase(GamePhase.OVERWORLD);
   };
 
-  const handleLocationChange = (newLoc: LocationId, startTileX: number, startTileY: number) => {
+  const handleLocationChange = (newLoc: LocationId, x: number, y: number) => {
     setLocation(newLoc);
-    setPlayerPos({ x: startTileX * 40, y: startTileY * 40 });
+    setPlayerPos({ x: x * 40, y: y * 40 });
   };
 
   const handlePlayerMove = (newPos: Position) => {
@@ -70,12 +73,11 @@ export default function App() {
   };
 
   const handleTalkNPC = (npcId: string) => {
-    if (flags[npcId + '_DEFEATED'] && npcId !== 'WALTEY_INTRO') return;
+    if (flags[npcId + "_DEFEATED"] && npcId !== "WALTEY_INTRO") return;
 
     if (DIALOGUES[npcId]) {
       setActiveDialogueId(npcId);
-      const firstNode = DIALOGUES[npcId][0];
-      setCurrentDialogueNodeId(firstNode.id);
+      setCurrentDialogueNodeId(DIALOGUES[npcId][0].id);
       setPhase(GamePhase.DIALOGUE);
     }
   };
@@ -83,18 +85,18 @@ export default function App() {
   const handleBattleEnd = (win: boolean) => {
     if (win) {
       if (currentEnemy) {
-        setFlags((prev) => ({
+        setFlags(prev => ({
           ...prev,
-          [currentEnemy.id + '_DEFEATED']: true,
+          [currentEnemy.id + "_DEFEATED"]: true
         }));
 
-        setPlayerStats((prev) => ({
+        setPlayerStats(prev => ({
           ...prev,
           xp: prev.xp + 20,
-          gold: prev.gold + 50,
+          gold: prev.gold + 50
         }));
 
-        if (currentEnemy.id === 'WEXA') {
+        if (currentEnemy.id === "WEXA") {
           setPhase(GamePhase.ENDING);
         } else {
           setPhase(GamePhase.OVERWORLD);
@@ -118,8 +120,8 @@ export default function App() {
         <div
           className={`transition-opacity duration-500 ${
             phase === GamePhase.DIALOGUE || phase === GamePhase.INTRO
-              ? 'opacity-40 pointer-events-none'
-              : 'opacity-100'
+              ? "opacity-40 pointer-events-none"
+              : "opacity-100"
           }`}
         >
           <Overworld
@@ -143,20 +145,28 @@ export default function App() {
           >
             {(() => {
               const nodes = DIALOGUES[activeDialogueId];
-              const node = nodes.find((n) => n.id === currentDialogueNodeId);
+              const node = nodes.find(n => n.id === currentDialogueNodeId);
               if (!node) return null;
+
               return (
                 <div className="flex gap-4 items-start">
                   <div className="text-6xl animate-bounce min-w-[80px] h-[80px] flex items-center justify-center border-2 border-white bg-gray-900">
                     {node.face}
                   </div>
+
                   <div className="flex-1">
                     <div className="text-yellow-400 text-xl font-bold mb-2 uppercase tracking-wider border-b border-gray-700 pb-1">
                       {node.speaker}
                     </div>
+
                     <div className="text-2xl leading-relaxed font-mono text-white min-h-[80px]">
-                      <Typewriter key={node.id} text={node.text} speed={15} />
+                      <Typewriter
+                        key={node.id}
+                        text={String(node.text)}
+                        speed={15}
+                      />
                     </div>
+
                     <div className="text-right mt-2 animate-pulse text-gray-500 text-sm">
                       [TIKLA / ENTER]
                     </div>
@@ -184,6 +194,7 @@ export default function App() {
             DOLANDIRILDIN.
           </h1>
           <p className="text-gray-400 mb-8">Hesabın boşaltıldı.</p>
+
           <button
             onClick={() => window.location.reload()}
             className="border-2 border-white px-6 py-3 hover:bg-white hover:text-black text-xl font-bold transition-colors"
@@ -198,15 +209,17 @@ export default function App() {
           <h1 className="text-6xl text-yellow-400 mb-8 font-bold pixel-borders p-4 animate-bounce">
             MUTLU SON?
           </h1>
+
           <div className="max-w-2xl text-xl space-y-6 leading-relaxed text-left border border-white p-8 bg-gray-900/50">
             <p>Ahmet, Wexa'nın teklifini reddetti ve "Unsubscribe" tuşuna bastı.</p>
             <p className="text-gray-400">*sistem çökme sesleri*</p>
             <p>Gözlerini açtığında kendi yatağındaydı. Ter içindeydi.</p>
             <p>
-              Telefonuna bir bildirim geldi:{' '}
+              Telefonuna bir bildirim geldi:{" "}
               <span className="text-green-400">"Maaşınız yatmıştır."</span>
             </p>
             <p>"Oh be," dedi Ahmet. "Gerçek hayat daha az stresli... sanırım."</p>
+
             <p className="text-xs text-gray-500 mt-10 text-center">
               YAPIMCI: AHMET'İN ABSÜRT PARALEL EVRENİ EKİBİ
             </p>
@@ -224,3 +237,4 @@ export default function App() {
     </div>
   );
 }
+
